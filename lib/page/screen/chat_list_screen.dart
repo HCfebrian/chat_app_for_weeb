@@ -1,19 +1,19 @@
 import 'package:chatappforweeb/resources/firebase_repository.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
-import 'package:chatappforweeb/utils/utilites.dart';
+import 'package:chatappforweeb/utils/utilities.dart';
 import 'package:chatappforweeb/widgets/appbar.dart';
 import 'package:chatappforweeb/widgets/custom_tile.dart';
 import 'package:flutter/material.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatListScreen extends StatefulWidget {
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  _ChatListScreenState createState() => _ChatListScreenState();
 }
 
 // global variable
 final FirebaseRepository _repository = FirebaseRepository();
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatListScreenState extends State<ChatListScreen> {
   String currentUserId;
   String initials = "";
 
@@ -23,8 +23,8 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _repository.getCurrentUser().then((user) {
       setState(() {
-        currentUserId = user.uid;
         initials = Utils.getInitials(user.displayName);
+        currentUserId = user.uid;
       });
     });
   }
@@ -43,7 +43,9 @@ class _ChatScreenState extends State<ChatScreen> {
             Icons.search,
             color: Colors.white,
           ),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pushNamed(context, "/search_page");
+          },
         ),
         IconButton(
           icon: Icon(
@@ -94,8 +96,8 @@ class _ChatListContainerState extends State<ChatListContainer> {
             ),
             subtitle: Text(
               "hello",
-              style: TextStyle(
-                  color: UniversalVariables.greyColor, fontSize: 14),
+              style:
+                  TextStyle(color: UniversalVariables.greyColor, fontSize: 14),
             ),
             leading: Container(
               constraints: BoxConstraints(maxHeight: 60, maxWidth: 60),
@@ -104,28 +106,25 @@ class _ChatListContainerState extends State<ChatListContainer> {
                   CircleAvatar(
                     maxRadius: 30,
                     backgroundColor: Colors.grey,
-                    backgroundImage:  NetworkImage("https://yt3.ggpht.com/a/AGF-l7_zT8BuWwHTymaQaBptCy7WrsOD72gYGp-puw=s900-c-k-c0xffffffff-no-rj-mo"),
+                    backgroundImage: NetworkImage(
+                        "https://yt3.ggpht.com/a/AGF-l7_zT8BuWwHTymaQaBptCy7WrsOD72gYGp-puw=s900-c-k-c0xffffffff-no-rj-mo"),
                   ),
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Container(
-                      height: 30,
-                      width: 30,
+                      height: 15,
+                      width: 15,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: UniversalVariables.onlineDotColor,
-                        border: Border.all(
-                          color: UniversalVariables.blackColor,
-                          width: 2
-
-                        )
-                      ),
+                          shape: BoxShape.circle,
+                          color: UniversalVariables.onlineDotColor,
+                          border: Border.all(
+                              color: UniversalVariables.blackColor, width: 2)),
                     ),
                   )
                 ],
               ),
-            )
-            ,);
+            ),
+          );
         },
       ),
     );

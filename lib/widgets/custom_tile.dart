@@ -60,7 +60,6 @@ class CustomTile extends StatelessWidget {
                             icon?? Container(),
                             icon != null? icon: Container(),
                             subtitle,
-
                           ],
                         )
                       ],

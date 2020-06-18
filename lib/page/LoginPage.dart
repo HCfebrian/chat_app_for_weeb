@@ -62,6 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     });
     _repository.signIn().then((FirebaseUser firebaseUser) {
       if (firebaseUser != null) {
+        print("firebaseuser after signin"+ firebaseUser.displayName);
         authenticateUser(firebaseUser);
       } else {
         print("there is an error");

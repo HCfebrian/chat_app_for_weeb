@@ -1,5 +1,6 @@
+import 'package:chatappforweeb/model/message.dart';
 import 'package:chatappforweeb/model/user.dart';
-import 'package:chatappforweeb/utils/utilites.dart';
+import 'package:chatappforweeb/utils/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -30,17 +31,17 @@ class FirebaseMethod {
 
   Future<bool> authenticateUser(FirebaseUser user) async {
     QuerySnapshot snapshot = await firestore
-        .collection("user")
+        .collection("users")
         .where("email", isEqualTo: user.email)
         .getDocuments();
 
     final List<DocumentSnapshot> docs = snapshot.documents;
-    print("hasil dari authuser ${(docs.length == 0 ? false : true).toString()}");
-    return docs.length == 0 ? false : true;
+    print(
+        "hasil dari authuser ${(docs.length == 0 ? true : false).toString()}");
+    return docs.length == 0 ? true : false;
   }
 
   Future<void> addUserToDB(FirebaseUser firebaseUser) async {
-
     String username = Utils.getUsername(firebaseUser.email);
 
     user = User(
@@ -51,13 +52,45 @@ class FirebaseMethod {
       username: username,
     );
 
-    firestore.collection("users").document(firebaseUser.uid).setData(user.toMap(user));
+    firestore
+        .collection("users")
+        .document(firebaseUser.uid)
+        .setData(user.toMap(user));
   }
 
-  Future<void> signOut() async{
+  Future<void> signOut() async {
     await _googleSignIn.disconnect();
     await _googleSignIn.signOut();
     print("logout");
     return _auth.signOut();
+  }
+
+  Future<List<User>> getAllUser(FirebaseUser user) async {
+    QuerySnapshot snapshot = await firestore.collection("users").getDocuments();
+
+    List<User> allUsers = [];
+    for (int i = 0; i < snapshot.documents.length; i++) {
+      if (snapshot.documents[i].documentID != user.uid) {
+        allUsers.add(User.fromMap(snapshot.documents[i].data));
+      }
+    }
+    return allUsers;
+  }
+
+  Future<void> addMessageToDB(
+      Message message, User sender, User receiver) async {
+    var mapMessage = message.toMap();
+
+    await firestore
+        .collection("messages")
+        .document(message.senderId)
+        .collection(message.receiverId)
+        .add(mapMessage);
+
+    return await firestore
+        .collection("messages")
+        .document(message.receiverId)
+        .collection(message.senderId)
+        .add(mapMessage);
   }
 }

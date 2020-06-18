@@ -1,4 +1,4 @@
-import 'package:chatappforweeb/page/screen/chat_screen.dart';
+import 'package:chatappforweeb/page/screen/chat_list_screen.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: UniversalVariables.blackColor,
       body: PageView(
         children: <Widget>[
-         Container(child: ChatScreen(),),
+         Container(child: ChatListScreen(),),
           Center(child: Text("Call List Screen")),
           Center(child: Text("Contact Screen"))
         ],
