@@ -1,3 +1,4 @@
+import 'package:chatappforweeb/model/user.dart';
 import 'package:chatappforweeb/resources/firebase_method.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -14,6 +15,9 @@ class FirebaseRepository {
     return _firebaseMethod.addUserToDB(user);
   }
 
-  Future<void> signOut() => _firebaseMethod.signOut();
+//  Future<void> signOut() => _firebaseMethod.signOut();
+
+
+  Future<List<User>> getAllUsers(FirebaseUser user) => _firebaseMethod.getAllUser(user);
 
 }

@@ -1,4 +1,4 @@
-import 'package:chatappforweeb/page/HomePage.dart';
+import 'package:chatappforweeb/page/home_page.dart';
 import 'package:chatappforweeb/resources/firebase_repository.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
