@@ -1,6 +1,5 @@
-import 'package:chatappforweeb/page/home_page.dart';
-import 'package:chatappforweeb/page/login_page.dart';
-import 'package:chatappforweeb/page/search_page.dart';
+import 'package:chatappforweeb/page/HomePage.dart';
+import 'package:chatappforweeb/page/LoginPage.dart';
 import 'package:chatappforweeb/resources/firebase_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,15 +15,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "WeebChat",
       debugShowCheckedModeBanner: false,
-      initialRoute: "/",
-      routes:{
-        "/search_page":(context) => SearchPage(),
-      },
       home: FutureBuilder(
         future: firebaseRepository.getCurrentUser(),
         builder: (context, AsyncSnapshot<FirebaseUser> snapshot) {
-          print(snapshot?.data?.displayName);
-          return snapshot.hasData? HomePage() : LoginPage();
+          return snapshot.hasData ? HomePage() : LoginPage();
         },
       ),
     );

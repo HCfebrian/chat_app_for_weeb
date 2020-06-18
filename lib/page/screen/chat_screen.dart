@@ -1,6 +1,6 @@
 import 'package:chatappforweeb/resources/firebase_repository.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
-import 'package:chatappforweeb/utils/utilities.dart';
+import 'package:chatappforweeb/utils/utilites.dart';
 import 'package:chatappforweeb/widgets/appbar.dart';
 import 'package:chatappforweeb/widgets/custom_tile.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +43,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Icons.search,
             color: Colors.white,
           ),
-          onPressed: () {Navigator.pushNamed(context, "/search_page");},
+          onPressed: () {},
         ),
         IconButton(
           icon: Icon(
