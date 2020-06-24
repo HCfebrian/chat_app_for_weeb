@@ -1,11 +1,22 @@
+import 'dart:io';
+
+import 'package:chatappforweeb/constant/string.dart';
+import 'package:chatappforweeb/enum/view_state.dart';
 import 'package:chatappforweeb/model/message.dart';
 import 'package:chatappforweeb/model/user.dart';
+import 'package:chatappforweeb/provider/image_upload_provider.dart';
 import 'package:chatappforweeb/resources/firebase_repository.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
+import 'package:chatappforweeb/utils/utilities.dart';
 import 'package:chatappforweeb/widgets/appbar.dart';
+import 'package:chatappforweeb/widgets/cached_image.dart';
 import 'package:chatappforweeb/widgets/custom_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class ChatPage extends StatefulWidget {
   final User receiver;
@@ -17,9 +28,13 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  ScrollController _listScrollController = ScrollController();
   TextEditingController inputMessageController = TextEditingController();
+  FocusNode focusNode = FocusNode();
   FirebaseRepository _repository = FirebaseRepository();
   bool isWriting = false;
+  bool showEmojiPicker = false;
+  ImageUploadProvider _imageUploadProvider;
   User sender;
   String _currentUserId;
 
@@ -39,26 +54,66 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  showKeyboard() => focusNode.requestFocus();
+
+  hideKeyboard() => focusNode.unfocus();
+
+  showEmojiContainer() {
+    setState(() {
+      showEmojiPicker = true;
+    });
+  }
+
+  hideEmojiContainer() {
+    setState(() {
+      showEmojiPicker = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _imageUploadProvider = Provider.of<ImageUploadProvider>(context);
     return Scaffold(
       backgroundColor: UniversalVariables.blackColor,
       appBar: customAppbar(context),
       body: Column(
         children: <Widget>[
+
           Flexible(
             child: messageList(),
           ),
+          _imageUploadProvider.getViewState == ViewState.LOADING
+              ? Container(
+                  margin: EdgeInsets.symmetric(horizontal: 15),
+                  alignment: Alignment.centerRight,
+                  child: CircularProgressIndicator())
+              : Container(),
           chatControl(),
+          showEmojiPicker ? Container(child: emojiContainer()) : Container()
         ],
       ),
+    );
+  }
+
+  emojiContainer() {
+    return EmojiPicker(
+      bgColor: UniversalVariables.blackColor,
+      indicatorColor: UniversalVariables.blueColor,
+      rows: 3,
+      columns: 7,
+      onEmojiSelected: (emoji, category) {
+        setState(() {
+          isWriting = true;
+        });
+        inputMessageController.text = inputMessageController.text + emoji.emoji;
+      },
     );
   }
 
   Widget messageList() {
     return StreamBuilder(
       stream: Firestore.instance
-          .collection("messages")
+          .collection(MESSAGE_COLLECTION)
           .document(_currentUserId)
           .collection(widget.receiver.uid)
           .orderBy("timestamp", descending: true)
@@ -67,41 +122,53 @@ class _ChatPageState extends State<ChatPage> {
         if (snapshot.data == null) {
           return Center(child: CircularProgressIndicator());
         }
+//        SchedulerBinding.instance.addPostFrameCallback((_) {
+//          _listScrollController.animateTo(
+//              _listScrollController.position.minScrollExtent,
+//              duration: Duration(microseconds: 2000),
+//              curve: Curves.easeInOut);
+//        });
         return ListView.builder(
             padding: EdgeInsets.all(10),
             itemCount: snapshot.data.documents.length,
+            reverse: true,
+            controller: _listScrollController,
             itemBuilder: (context, index) {
-              return chatMessageItem(snapshot.data.documents[index]);
+              return chatMessageItem(
+                  Message.fromMap(snapshot.data.documents[index].data));
             });
       },
     );
   }
 
-  Widget chatMessageItem(DocumentSnapshot snapshot) {
+  Widget chatMessageItem(Message message) {
+    print(
+        "message sender id ${message.senderId} message current id ${_currentUserId}");
     return Container(
       margin: EdgeInsets.symmetric(vertical: 15),
       child: Container(
-        alignment: snapshot['senderID'] == _currentUserId
-            ? Alignment.centerLeft
-            : Alignment.centerRight,
-        child: snapshot['senderID'] == _currentUserId
-            ? senderLayout(snapshot)
-            : receiverLayout(snapshot),
+        alignment: message.senderId == _currentUserId
+            ? Alignment.centerRight
+            : Alignment.centerLeft,
+        child: message.senderId == _currentUserId
+            ? senderLayout(message)
+            : receiverLayout(message),
       ),
     );
   }
 
-  getMessage(DocumentSnapshot documentSnapshot) {
-    return Text(
-      documentSnapshot["message"],
+  getMessage(Message message) {
+    return message.type != MESSAGE_TYPE_IMAGE ?
+     Text(
+      message.message,
       style: TextStyle(
         color: Colors.white,
         fontSize: 16,
       ),
-    );
+    ) : CachedImage(url : message.photoUrl);
   }
 
-  Widget senderLayout(DocumentSnapshot documentSnapshot) {
+  Widget senderLayout(Message message) {
     Radius messageRadius = Radius.circular(10);
     return Container(
       constraints: BoxConstraints(
@@ -115,12 +182,11 @@ class _ChatPageState extends State<ChatPage> {
             topRight: messageRadius,
             bottomLeft: messageRadius),
       ),
-      child: Padding(
-          padding: EdgeInsets.all(10), child: getMessage(documentSnapshot)),
+      child: Padding(padding: EdgeInsets.all(10), child: getMessage(message)),
     );
   }
 
-  Widget receiverLayout(DocumentSnapshot documentSnapshot) {
+  Widget receiverLayout(Message message) {
     Radius messageRadius = Radius.circular(10);
     return Container(
       margin: EdgeInsets.only(top: 12),
@@ -136,7 +202,7 @@ class _ChatPageState extends State<ChatPage> {
       ),
       child: Padding(
         padding: EdgeInsets.all(10),
-        child: getMessage(documentSnapshot),
+        child: getMessage(message),
       ),
     );
   }
@@ -227,14 +293,24 @@ class _ChatPageState extends State<ChatPage> {
           receiverId: widget.receiver.uid,
           senderId: sender.uid,
           message: text,
-          timestamp: FieldValue.serverTimestamp(),
+          timestamp: Timestamp.now(),
           type: 'text');
 
       setState(() {
         isWriting = false;
       });
-
       _repository.addMessageToDB(message, sender, widget.receiver);
+      inputMessageController.clear();
+    }
+
+    pickImage({@required ImageSource imageSource}) async {
+      File selectedImage = await Utils.pickImage(source: imageSource);
+      _repository.uploadImage(
+        image: selectedImage,
+        receiverId: widget.receiver.uid,
+        senderId: _currentUserId,
+        imageUploadProvider: _imageUploadProvider
+      );
     }
 
     return Container(
@@ -255,33 +331,48 @@ class _ChatPageState extends State<ChatPage> {
             width: 5,
           ),
           Expanded(
-            child: TextField(
-              controller: inputMessageController,
-              style: TextStyle(color: Colors.white),
-              onChanged: (typingMassage) {
-                (typingMassage.isNotEmpty && typingMassage.trim() != "")
-                    ? setWritingTo(true)
-                    : setWritingTo(false);
-              },
-              decoration: InputDecoration(
-                  hintStyle: TextStyle(color: UniversalVariables.greyColor),
-                  hintText: "Type a message",
-                  border: OutlineInputBorder(
-                      borderRadius: const BorderRadius.all(
-                        const Radius.circular(50),
-                      ),
-                      borderSide: BorderSide.none),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                  filled: true,
-                  fillColor: UniversalVariables.separatorColor,
-                  suffixIcon: GestureDetector(
-                    child: Icon(
-                      Icons.face,
-                      color: Colors.white,
-                    ),
-                    onTap: () {},
-                  )),
+            child: Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                TextField(
+                  onTap: () => hideEmojiContainer(),
+                  controller: inputMessageController,
+                  focusNode: focusNode,
+                  style: TextStyle(color: Colors.white),
+                  onChanged: (typingMassage) {
+                    (typingMassage.isNotEmpty && typingMassage.trim() != "")
+                        ? setWritingTo(true)
+                        : setWritingTo(false);
+                  },
+                  decoration: InputDecoration(
+                    hintStyle: TextStyle(color: UniversalVariables.greyColor),
+                    hintText: "Type a message",
+                    border: OutlineInputBorder(
+                        borderRadius: const BorderRadius.all(
+                          const Radius.circular(50),
+                        ),
+                        borderSide: BorderSide.none),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    filled: true,
+                    fillColor: UniversalVariables.separatorColor,
+                  ),
+                ),
+                IconButton(
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  icon: Icon(Icons.face),
+                  onPressed: () {
+                    if (!showEmojiPicker) {
+                      hideKeyboard();
+                      showEmojiContainer();
+                    } else {
+                      hideEmojiContainer();
+                      showKeyboard();
+                    }
+                  },
+                )
+              ],
             ),
           ),
           isWriting
@@ -290,7 +381,11 @@ class _ChatPageState extends State<ChatPage> {
                   padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Icon(Icons.record_voice_over),
                 ),
-          isWriting ? Container() : Icon(Icons.camera_alt),
+          isWriting
+              ? Container()
+              : GestureDetector(
+                  onTap: () => pickImage(imageSource: ImageSource.camera),
+                  child: Icon(Icons.camera_alt)),
           isWriting
               ? Container(
                   margin: EdgeInsets.only(left: 10),

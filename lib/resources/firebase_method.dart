@@ -1,14 +1,21 @@
+import 'dart:io';
+
+import 'package:chatappforweeb/constant/string.dart';
 import 'package:chatappforweeb/model/message.dart';
 import 'package:chatappforweeb/model/user.dart';
+import 'package:chatappforweeb/provider/image_upload_provider.dart';
 import 'package:chatappforweeb/utils/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseMethod {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final Firestore firestore = Firestore.instance;
+  StorageReference _storageReference;
+
   User user = User();
 
   Future<FirebaseUser> getCurrentUser() async {
@@ -31,13 +38,11 @@ class FirebaseMethod {
 
   Future<bool> authenticateUser(FirebaseUser user) async {
     QuerySnapshot snapshot = await firestore
-        .collection("users")
+        .collection(USER_COLLECTION)
         .where("email", isEqualTo: user.email)
         .getDocuments();
 
     final List<DocumentSnapshot> docs = snapshot.documents;
-    print(
-        "hasil dari authuser ${(docs.length == 0 ? true : false).toString()}");
     return docs.length == 0 ? true : false;
   }
 
@@ -53,7 +58,7 @@ class FirebaseMethod {
     );
 
     firestore
-        .collection("users")
+        .collection(USER_COLLECTION)
         .document(firebaseUser.uid)
         .setData(user.toMap(user));
   }
@@ -66,7 +71,8 @@ class FirebaseMethod {
   }
 
   Future<List<User>> getAllUser(FirebaseUser user) async {
-    QuerySnapshot snapshot = await firestore.collection("users").getDocuments();
+    QuerySnapshot snapshot =
+        await firestore.collection(USER_COLLECTION).getDocuments();
 
     List<User> allUsers = [];
     for (int i = 0; i < snapshot.documents.length; i++) {
@@ -82,15 +88,65 @@ class FirebaseMethod {
     var mapMessage = message.toMap();
 
     await firestore
-        .collection("messages")
+        .collection(MESSAGE_COLLECTION)
         .document(message.senderId)
         .collection(message.receiverId)
         .add(mapMessage);
 
     return await firestore
-        .collection("messages")
+        .collection(MESSAGE_COLLECTION)
         .document(message.receiverId)
         .collection(message.senderId)
         .add(mapMessage);
+  }
+
+  Future<String> uploadImageToStorage(File image) async {
+    try {
+      _storageReference = FirebaseStorage.instance
+          .ref()
+          .child('${DateTime.now().millisecondsSinceEpoch}');
+      StorageUploadTask _storageUploadTask = _storageReference.putFile(image);
+
+      var url =
+          await (await _storageUploadTask.onComplete).ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void setImageMsg(String url, String receiverId, senderId) async {
+    Message _message;
+
+    _message = Message.imageMessage(
+        message: "IMAGE",
+        receiverId: receiverId,
+        senderId: senderId,
+        photoUrl: url,
+        timestamp: Timestamp.now(),
+        type: "image");
+    var map = _message.toImageMap();
+
+    await firestore
+        .collection(MESSAGE_COLLECTION)
+        .document(_message.senderId)
+        .collection(_message.receiverId)
+        .add(map);
+
+    await firestore
+        .collection(MESSAGE_COLLECTION)
+        .document(_message.receiverId)
+        .collection(_message.senderId)
+        .add(map);
+  }
+
+  void uploadImage(File image, String receiverId, String senderId,
+      ImageUploadProvider imageUploadProvider) async {
+    imageUploadProvider.setToLoading();
+
+    String url = await uploadImageToStorage(image);
+
+    imageUploadProvider.setToIdle();
+    setImageMsg(url, receiverId, senderId);
   }
 }
