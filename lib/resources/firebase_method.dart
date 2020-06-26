@@ -12,9 +12,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseMethod {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final Firestore firestore = Firestore.instance;
+  GoogleSignIn _googleSignIn = GoogleSignIn();
+  static final Firestore firestore = Firestore.instance;
   StorageReference _storageReference;
+  static final CollectionReference _userCollection =
+      firestore.collection(USER_COLLECTION);
 
   User user = User();
 
@@ -112,6 +114,7 @@ class FirebaseMethod {
       return url;
     } catch (e) {
       print(e);
+      return "error";
     }
   }
 
@@ -138,6 +141,13 @@ class FirebaseMethod {
         .document(_message.receiverId)
         .collection(_message.senderId)
         .add(map);
+  }
+
+  Future<User> getUserDetails() async {
+    FirebaseUser currentUser = await getCurrentUser();
+    DocumentSnapshot documentSnapshot =
+        await _userCollection.document(currentUser.uid).get();
+    return User.fromMap(documentSnapshot.data);
   }
 
   void uploadImage(File image, String receiverId, String senderId,

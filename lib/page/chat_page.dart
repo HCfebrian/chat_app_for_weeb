@@ -6,6 +6,7 @@ import 'package:chatappforweeb/model/message.dart';
 import 'package:chatappforweeb/model/user.dart';
 import 'package:chatappforweeb/provider/image_upload_provider.dart';
 import 'package:chatappforweeb/resources/firebase_repository.dart';
+import 'package:chatappforweeb/utils/call_utilities.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:chatappforweeb/utils/utilities.dart';
 import 'package:chatappforweeb/widgets/appbar.dart';
@@ -14,7 +15,6 @@ import 'package:chatappforweeb/widgets/custom_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -78,7 +78,6 @@ class _ChatPageState extends State<ChatPage> {
       appBar: customAppbar(context),
       body: Column(
         children: <Widget>[
-
           Flexible(
             child: messageList(),
           ),
@@ -143,7 +142,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget chatMessageItem(Message message) {
     print(
-        "message sender id ${message.senderId} message current id ${_currentUserId}");
+        "message sender id ${message.senderId} message current id $_currentUserId");
     return Container(
       margin: EdgeInsets.symmetric(vertical: 15),
       child: Container(
@@ -158,14 +157,15 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   getMessage(Message message) {
-    return message.type != MESSAGE_TYPE_IMAGE ?
-     Text(
-      message.message,
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 16,
-      ),
-    ) : CachedImage(url : message.photoUrl);
+    return message.type != MESSAGE_TYPE_IMAGE
+        ? Text(
+            message.message,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+            ),
+          )
+        : CachedImage(message.photoUrl,width: 250, height: 250, radius:  10,);
   }
 
   Widget senderLayout(Message message) {
@@ -306,11 +306,10 @@ class _ChatPageState extends State<ChatPage> {
     pickImage({@required ImageSource imageSource}) async {
       File selectedImage = await Utils.pickImage(source: imageSource);
       _repository.uploadImage(
-        image: selectedImage,
-        receiverId: widget.receiver.uid,
-        senderId: _currentUserId,
-        imageUploadProvider: _imageUploadProvider
-      );
+          image: selectedImage,
+          receiverId: widget.receiver.uid,
+          senderId: _currentUserId,
+          imageUploadProvider: _imageUploadProvider);
     }
 
     return Container(
@@ -421,7 +420,9 @@ class _ChatPageState extends State<ChatPage> {
       action: <Widget>[
         IconButton(
           icon: Icon(Icons.video_call),
-          onPressed: () {},
+          onPressed: () {
+            CallUtils.dial(from: sender, to: widget.receiver, contex: context);
+          },
         ),
         IconButton(
           icon: Icon(Icons.call),

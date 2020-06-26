@@ -8,8 +8,8 @@ class Call {
   String channelID;
   bool hasDialled;
 
-  Call(this.callerId, this.callerName, this.callerPic, this.receiverName,
-      this.receiverId, this.receiverPic, this.channelID, this.hasDialled);
+  Call({this.callerId, this.callerName, this.callerPic, this.receiverName,
+      this.receiverId, this.receiverPic, this.channelID, this.hasDialled});
 
   Map<String, dynamic> tomap(Call call){
     Map<String, dynamic> callMap = Map();

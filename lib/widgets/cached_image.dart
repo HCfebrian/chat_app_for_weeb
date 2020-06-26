@@ -2,31 +2,45 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class CachedImage extends StatelessWidget {
-  final String url;
+  final String imageUrl;
+  final bool isRound;
+  final double radius;
+  final double height;
+  final double width;
 
-  CachedImage({this.url});
+  final BoxFit fit;
+
+  final String noImageAvailable =
+      "https://www.esm.rochester.edu/uploads/NoPhotoAvailable.jpg";
+
+  CachedImage(this.imageUrl, {
+    this.isRound = false,
+    this.radius = 0,
+    this.height,
+    this.width,
+    this.fit = BoxFit.cover});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 200,
-      child: ClipRect(
-        child: CachedNetworkImage(
-          imageUrl: url,
-          imageBuilder: (context, image)=> Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              image: DecorationImage(
-                image: image,
-                fit: BoxFit.cover,
-              )
-            ),
-          ),
-          placeholder: (context, url) => Center(
-            child: Container(child: CircularProgressIndicator()),
+    try {
+      return SizedBox(
+        height: isRound ? radius : height,
+        width: isRound ? radius : height,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(isRound ? 50 : radius),
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: fit,
+            placeholder: (context, url) =>
+                Center(child: CircularProgressIndicator(),),
+            errorWidget: (context, url, error) =>
+                Image.network(noImageAvailable, fit: BoxFit.cover,),
           ),
         ),
-      ),
-    );
+      );
+    }catch(e){
+      print(e);
+      return Image.network(noImageAvailable,fit: BoxFit.cover,);
+    }
   }
 }
