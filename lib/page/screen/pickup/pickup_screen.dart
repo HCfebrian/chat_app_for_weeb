@@ -1,15 +1,14 @@
-
-
 import 'package:chatappforweeb/model/call.dart';
 import 'package:chatappforweeb/page/screen/call_screen.dart';
 import 'package:chatappforweeb/resources/call_method.dart';
+import 'package:chatappforweeb/utils/permission.dart';
 import 'package:flutter/material.dart';
 
 class PickUpScreen extends StatelessWidget {
   final Call call;
   final CallMethods callMethods = CallMethods();
 
-  PickUpScreen({ @required this.call});
+  PickUpScreen({@required this.call});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,9 @@ class PickUpScreen extends StatelessWidget {
               height: 150,
               width: 150,
             ),
-            SizedBox(height: 15,),
+            SizedBox(
+              height: 15,
+            ),
             Text(
               call.callerName,
               style: TextStyle(
@@ -40,7 +41,9 @@ class PickUpScreen extends StatelessWidget {
                 fontSize: 20,
               ),
             ),
-            SizedBox(height: 75,),
+            SizedBox(
+              height: 75,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -51,13 +54,18 @@ class PickUpScreen extends StatelessWidget {
                     await callMethods.endCall(call: call);
                   },
                 ),
-                SizedBox(width: 25,),
+                SizedBox(
+                  width: 25,
+                ),
                 IconButton(
                   icon: Icon(Icons.call),
                   color: Colors.green,
-                  onPressed: ()=> Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => CallScreen(call: call)
-                  )),
+                  onPressed: () async => await Permissions.getPermission()
+                      ? Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CallScreen(call: call)))
+                      : {},
                 )
               ],
             )

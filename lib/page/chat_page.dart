@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chatappforweeb/callwidget/call.dart';
 import 'package:chatappforweeb/constant/string.dart';
 import 'package:chatappforweeb/enum/view_state.dart';
 import 'package:chatappforweeb/model/message.dart';
@@ -69,6 +70,7 @@ class _ChatPageState extends State<ChatPage> {
       showEmojiPicker = false;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -421,7 +423,7 @@ class _ChatPageState extends State<ChatPage> {
         IconButton(
           icon: Icon(Icons.video_call),
           onPressed: () {
-            CallUtils.dial(from: sender, to: widget.receiver, contex: context);
+             CallUtils.dial(from: sender, to: widget.receiver, contex: context);
           },
         ),
         IconButton(

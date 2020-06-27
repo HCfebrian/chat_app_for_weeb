@@ -2,57 +2,45 @@ import 'dart:async';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:chatappforweeb/constant/api_key.dart';
-import 'package:chatappforweeb/model/call.dart';
-import 'package:chatappforweeb/provider/user_provider.dart';
-import 'package:chatappforweeb/resources/call_method.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:provider/provider.dart';
 
-class CallScreen extends StatefulWidget {
-  final Call call;
+class CallPage extends StatefulWidget {
+  /// non-modifiable channel name of the page
+  final String channelName;
 
-  CallScreen({this.call});
+  /// non-modifiable client role of the page
+  final ClientRole role;
+
+  /// Creates a call page with given channel name.
+  const CallPage({Key key, this.channelName, this.role}) : super(key: key);
 
   @override
-  _CallScreenState createState() => _CallScreenState();
+  _CallPageState createState() => _CallPageState();
 }
 
-class _CallScreenState extends State<CallScreen> {
-  final CallMethods callMethods = CallMethods();
-  UserProvider userProvider;
-  StreamSubscription streamSubscription;
-
+class _CallPageState extends State<CallPage> {
   static final _users = <int>[];
   final _infoStrings = <String>[];
   bool muted = false;
 
   @override
+  void dispose() {
+    // clear users
+    _users.clear();
+    // destroy sdk
+    AgoraRtcEngine.leaveChannel();
+    AgoraRtcEngine.destroy();
+    super.dispose();
+  }
+
+  @override
   void initState() {
-    initializeAgora();
-    addPostScreenCallback();
     super.initState();
+    // initialize agora sdk
+    initialize();
   }
 
-  addPostScreenCallback() {
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      userProvider = Provider.of<UserProvider>(context, listen: false);
-      streamSubscription = callMethods
-          .callStream(uid: userProvider.getUser.uid)
-          .listen((DocumentSnapshot ds) {
-        switch (ds.data) {
-          case null:
-            Navigator.pop(context);
-            break;
-          default:
-            break;
-        }
-      });
-    });
-  }
-
-  Future<void> initializeAgora() async {
+  Future<void> initialize() async {
     if (APP_ID.isEmpty) {
       setState(() {
         _infoStrings.add(
@@ -69,16 +57,7 @@ class _CallScreenState extends State<CallScreen> {
     VideoEncoderConfiguration configuration = VideoEncoderConfiguration();
     configuration.dimensions = Size(1920, 1080);
     await AgoraRtcEngine.setVideoEncoderConfiguration(configuration);
-    await AgoraRtcEngine.joinChannel(null, widget.call.channelID, null, 0);
-  }
-
-  @override
-  void dispose() {
-    _users.clear();
-    streamSubscription.cancel();
-    AgoraRtcEngine.leaveChannel();
-    AgoraRtcEngine.destroy();
-    super.dispose();
+    await AgoraRtcEngine.joinChannel(null, widget.channelName, null, 0);
   }
 
   /// Create agora sdk instance and initialize
@@ -86,7 +65,7 @@ class _CallScreenState extends State<CallScreen> {
     await AgoraRtcEngine.create(APP_ID);
     await AgoraRtcEngine.enableVideo();
     await AgoraRtcEngine.setChannelProfile(ChannelProfile.LiveBroadcasting);
-    await AgoraRtcEngine.setClientRole(ClientRole.Broadcaster);
+    await AgoraRtcEngine.setClientRole(widget.role);
   }
 
   /// Add agora event handlers
@@ -97,7 +76,7 @@ class _CallScreenState extends State<CallScreen> {
         _infoStrings.add(info);
       });
     };
-    
+
     AgoraRtcEngine.onJoinChannelSuccess = (
       String channel,
       int uid,
@@ -125,7 +104,6 @@ class _CallScreenState extends State<CallScreen> {
     };
 
     AgoraRtcEngine.onUserOffline = (int uid, int reason) {
-      callMethods.endCall(call: widget.call);
       setState(() {
         final info = 'userOffline: $uid';
         _infoStrings.add(info);
@@ -149,8 +127,9 @@ class _CallScreenState extends State<CallScreen> {
   /// Helper function to get list of native views
   List<Widget> _getRenderViews() {
     final List<AgoraRenderWidget> list = [];
-    list.add(AgoraRenderWidget(0, local: true, preview: true));
-
+    if (widget.role == ClientRole.Broadcaster) {
+      list.add(AgoraRenderWidget(0, local: true, preview: true));
+    }
     _users.forEach((int uid) => list.add(AgoraRenderWidget(uid)));
     return list;
   }
@@ -210,7 +189,7 @@ class _CallScreenState extends State<CallScreen> {
 
   /// Toolbar layout
   Widget _toolbar() {
-//    if (getClientRole() == ClientRole.Audience) return Container();
+    if (widget.role == ClientRole.Audience) return Container();
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.symmetric(vertical: 48),
@@ -230,7 +209,7 @@ class _CallScreenState extends State<CallScreen> {
             padding: const EdgeInsets.all(12.0),
           ),
           RawMaterialButton(
-            onPressed: () => callMethods.endCall(call: widget.call),
+            onPressed: () => _onCallEnd(context),
             child: Icon(
               Icons.call_end,
               color: Colors.white,
@@ -308,7 +287,11 @@ class _CallScreenState extends State<CallScreen> {
     );
   }
 
-   void _onToggleMute() {
+  void _onCallEnd(BuildContext context) {
+    Navigator.pop(context);
+  }
+
+  void _onToggleMute() {
     setState(() {
       muted = !muted;
     });
@@ -336,27 +319,5 @@ class _CallScreenState extends State<CallScreen> {
         ),
       ),
     );
-//    return Scaffold(
-//      body: Container(
-//        alignment: Alignment.center,
-//        child: Column(
-//          mainAxisSize: MainAxisSize.min,
-//          children: <Widget>[
-//            Text("Call Has been made"),
-//            MaterialButton(
-//              color: Colors.red,
-//              child: Icon(
-//                Icons.call_end,
-//                color: Colors.white,
-//              ),
-//              onPressed: () {
-//                callMethods.endCall(call: widget.call);
-//                Navigator.pop(context);
-//              },
-//            )
-//          ],
-//        ),
-//      ),
-//    );
   }
 }

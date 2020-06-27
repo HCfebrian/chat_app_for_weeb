@@ -25,8 +25,6 @@ class _PickupLayoutState extends State<PickupLayout> {
         ? StreamBuilder<DocumentSnapshot>(
             stream: callMethods.callStream(uid: userProvider.getUser.uid),
             builder: (context, snapshot) {
-              print("auto isi dari  snapshot has data? ${(snapshot.hasData).toString()}");
-              print("auto isi dari  snapshot.data.data null? ${(snapshot.data==null).toString()}");
               if (snapshot.hasData && snapshot.data.data != null) {
                 Call call = Call.fromMap(snapshot.data.data);
                 if(!call.hasDialled){
@@ -36,35 +34,12 @@ class _PickupLayoutState extends State<PickupLayout> {
                 }
               }
               return widget.scaffold;
-
             },
           )
         : Scaffold(
             body: Center(
-              child: Column(
-                children: <Widget>[
-                RaisedButton(child: Text("hello there"),
-                  onPressed: (){
-                    print(" isi dari user provider null? ${(userProvider==null).toString()}");
-                    print(" isi dari user provider get user null? ${(userProvider.getUser==null).toString()}");
-                  },
-                ), CircularProgressIndicator(),],
-              ),
+              child: CircularProgressIndicator(),
             ),
           );
-  }
-}
-
-class Check extends StatelessWidget {
-  DocumentSnapshot documentSnapshot;
-
-
-  Check(this.documentSnapshot);
-
-  @override
-  Widget build(BuildContext context) {
-    print("auto isi dari document snapshot null? ${(documentSnapshot.data==null).toString()}");
-
-    return Container();
   }
 }
