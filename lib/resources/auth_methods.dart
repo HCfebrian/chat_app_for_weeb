@@ -1,8 +1,10 @@
 import 'package:chatappforweeb/constant/string.dart';
+import 'package:chatappforweeb/enum/user_state.dart';
 import 'package:chatappforweeb/model/user.dart';
 import 'package:chatappforweeb/utils/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthMethods {
@@ -30,6 +32,17 @@ class AuthMethods {
     return User.fromMap(documentSnapshot.data);
   }
 
+  Future<User> getUserDetailById(id) async {
+    try {
+      DocumentSnapshot documentSnapshot =
+          await _userCollection.document(id).get();
+      return User.fromMap(documentSnapshot.data);
+    } on Exception catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
   Future<FirebaseUser> signIn() async {
     FirebaseUser user;
     GoogleSignInAccount _signInAccount = await _googleSignIn.signIn();
@@ -40,10 +53,9 @@ class AuthMethods {
         accessToken: _signInAuthentication.accessToken,
         idToken: _signInAuthentication.idToken);
 
-    try{
-      user =  (await _auth.signInWithCredential(credential)).user;
-
-    }catch(e){
+    try {
+      user = (await _auth.signInWithCredential(credential)).user;
+    } catch (e) {
       print("gagal bosku");
     }
 
@@ -95,4 +107,13 @@ class AuthMethods {
     await _googleSignIn.signOut();
     return await _auth.signOut();
   }
+
+  void setUserState({@required String userId, @required UserState userState}) {
+    int stateNum = Utils.stateToNum(userState);
+
+    _userCollection.document(userId).updateData({"state": stateNum});
+  }
+
+  Stream<DocumentSnapshot> getUserStream({@required String uid}) =>
+      _userCollection.document(uid).snapshots();
 }

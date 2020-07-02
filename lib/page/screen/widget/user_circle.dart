@@ -1,13 +1,10 @@
-import 'package:flutter/material.dart';
-
-
 import 'package:chatappforweeb/provider/user_provider.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
+import 'package:chatappforweeb/utils/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class UserCircle extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     final UserProvider userProvider = Provider.of<UserProvider>(context);
@@ -23,7 +20,7 @@ class UserCircle extends StatelessWidget {
           Align(
             alignment: Alignment.center,
             child: Text(
-              userProvider.getUser.name,
+              Utils.getInitials(userProvider.getUser.name),
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: UniversalVariables.lightBlueColor,

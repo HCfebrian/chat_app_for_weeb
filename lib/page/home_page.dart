@@ -1,6 +1,8 @@
+import 'package:chatappforweeb/enum/user_state.dart';
 import 'package:chatappforweeb/page/screen/chat_list_screen.dart';
 import 'package:chatappforweeb/page/screen/pickup/pickup_layout.dart';
 import 'package:chatappforweeb/provider/user_provider.dart';
+import 'package:chatappforweeb/resources/auth_methods.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,10 +14,11 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   PageController pageController;
   int _page = 0;
   UserProvider userProvider;
+  final AuthMethods _authMethods = AuthMethods();
 
   @override
   void initState() {
@@ -24,7 +27,10 @@ class _HomePageState extends State<HomePage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       userProvider = Provider.of<UserProvider>(context, listen: false);
       userProvider.refreshUser();
+
     });
+
+    WidgetsBinding.instance.addObserver(this);
     pageController = PageController();
   }
 
@@ -32,6 +38,48 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _page = page;
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    String currentUserId =
+        (userProvider != null && userProvider.getUser != null)
+            ? userProvider.getUser.uid
+            : "";
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        currentUserId != null
+            ? _authMethods.setUserState(
+                userId: currentUserId, userState: UserState.Online)
+            : print("resume state");
+        break;
+      case AppLifecycleState.inactive:
+        currentUserId != null
+            ? _authMethods.setUserState(
+                userId: currentUserId, userState: UserState.Offline)
+            : print("Inactive");
+        break;
+      case AppLifecycleState.paused:
+        currentUserId != null
+            ? _authMethods.setUserState(
+                userId: currentUserId, userState: UserState.Waiting)
+            : print("pause state");
+        break;
+      case AppLifecycleState.detached:
+        currentUserId != null
+            ? _authMethods.setUserState(
+                userId: currentUserId, userState: UserState.Offline)
+            : print("detached state");
+        break;
+    }
   }
 
   void navigationTapped(int page) {
