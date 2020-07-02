@@ -1,5 +1,5 @@
 import 'package:chatappforweeb/page/home_page.dart';
-import 'package:chatappforweeb/resources/firebase_repository.dart';
+import 'package:chatappforweeb/resources/auth_methods.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +11,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  FirebaseRepository _repository = FirebaseRepository();
+  final AuthMethods _authMethods = AuthMethods();
   bool isLoginPressed = false;
 
   @override
@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isLoginPressed = true;
     });
-    _repository.signIn().then((FirebaseUser firebaseUser) {
+    _authMethods.signIn().then((FirebaseUser firebaseUser) {
       if (firebaseUser != null) {
         print("firebaseuser after signin"+ firebaseUser.displayName);
         authenticateUser(firebaseUser);
@@ -77,10 +77,10 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isLoginPressed = false;
     });
-    _repository.authenticateUser(user).then((isNewUser) {
+    _authMethods.authenticateUser(user).then((isNewUser) {
       print("hasil is new user ${isNewUser.toString()}");
       if (isNewUser) {
-        _repository.addDataToDb(user).then((value) {
+        _authMethods.addDataToDb(user).then((value) {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) {
             return HomePage();

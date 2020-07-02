@@ -1,6 +1,6 @@
 import 'package:chatappforweeb/model/user.dart';
 import 'package:chatappforweeb/page/chat_page.dart';
-import 'package:chatappforweeb/resources/firebase_repository.dart';
+import 'package:chatappforweeb/resources/auth_methods.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:chatappforweeb/widgets/custom_tile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,7 +13,7 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  FirebaseRepository _repository = FirebaseRepository();
+  AuthMethods _authMethods = AuthMethods();
   List<User> _listUser = [];
 
   String query = "";
@@ -23,8 +23,8 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    _repository.getCurrentUser().then((FirebaseUser currentUser) {
-      _repository.getAllUsers(currentUser).then((List<User> allUser) {
+    _authMethods.getCurrentUser().then((FirebaseUser currentUser) {
+      _authMethods.fetchAllUsers(currentUser).then((List<User> allUser) {
         setState(() {
           _listUser = allUser;
         });

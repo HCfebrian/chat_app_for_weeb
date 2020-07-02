@@ -4,6 +4,7 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:chatappforweeb/constant/api_key.dart';
 import 'package:chatappforweeb/model/call.dart';
 import 'package:chatappforweeb/provider/user_provider.dart';
+import 'package:chatappforweeb/resources/auth_methods.dart';
 import 'package:chatappforweeb/resources/call_method.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class CallScreen extends StatefulWidget {
 
 class _CallScreenState extends State<CallScreen> {
   final CallMethods callMethods = CallMethods();
+  final AuthMethods _authMethods = AuthMethods();
   UserProvider userProvider;
   StreamSubscription streamSubscription;
 
@@ -32,6 +34,9 @@ class _CallScreenState extends State<CallScreen> {
   void initState() {
     initializeAgora();
     addPostScreenCallback();
+    _authMethods.getCurrentUser().then((user) {
+
+    });
     super.initState();
   }
 

@@ -1,12 +1,13 @@
 import 'dart:io';
 
-import 'package:chatappforweeb/callwidget/call.dart';
 import 'package:chatappforweeb/constant/string.dart';
 import 'package:chatappforweeb/enum/view_state.dart';
 import 'package:chatappforweeb/model/message.dart';
 import 'package:chatappforweeb/model/user.dart';
 import 'package:chatappforweeb/provider/image_upload_provider.dart';
-import 'package:chatappforweeb/resources/firebase_repository.dart';
+import 'package:chatappforweeb/resources/auth_methods.dart';
+import 'package:chatappforweeb/resources/chat_methods.dart';
+import 'package:chatappforweeb/resources/storage_methods.dart';
 import 'package:chatappforweeb/utils/call_utilities.dart';
 import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:chatappforweeb/utils/utilities.dart';
@@ -32,7 +33,9 @@ class _ChatPageState extends State<ChatPage> {
   ScrollController _listScrollController = ScrollController();
   TextEditingController inputMessageController = TextEditingController();
   FocusNode focusNode = FocusNode();
-  FirebaseRepository _repository = FirebaseRepository();
+  AuthMethods _authMethods = AuthMethods();
+  ChatMethods _chatMethods = ChatMethods();
+  StorageMethods _storageMethods = StorageMethods();
   bool isWriting = false;
   bool showEmojiPicker = false;
   ImageUploadProvider _imageUploadProvider;
@@ -42,7 +45,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _repository.getCurrentUser().then((currentUser) {
+    _authMethods.getCurrentUser().then((currentUser) {
       _currentUserId = currentUser.uid;
 
       setState(() {
@@ -70,7 +73,6 @@ class _ChatPageState extends State<ChatPage> {
       showEmojiPicker = false;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +169,12 @@ class _ChatPageState extends State<ChatPage> {
               fontSize: 16,
             ),
           )
-        : CachedImage(message.photoUrl,width: 250, height: 250, radius:  10,);
+        : CachedImage(
+            message.photoUrl,
+            width: 250,
+            height: 250,
+            radius: 10,
+          );
   }
 
   Widget senderLayout(Message message) {
@@ -301,13 +308,13 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         isWriting = false;
       });
-      _repository.addMessageToDB(message, sender, widget.receiver);
+      _chatMethods.addMessageToDb(message, sender, widget.receiver);
       inputMessageController.clear();
     }
 
     pickImage({@required ImageSource imageSource}) async {
       File selectedImage = await Utils.pickImage(source: imageSource);
-      _repository.uploadImage(
+      _storageMethods.uploadImage(
           image: selectedImage,
           receiverId: widget.receiver.uid,
           senderId: _currentUserId,
@@ -423,7 +430,7 @@ class _ChatPageState extends State<ChatPage> {
         IconButton(
           icon: Icon(Icons.video_call),
           onPressed: () {
-             CallUtils.dial(from: sender, to: widget.receiver, contex: context);
+            CallUtils.dial(from: sender, to: widget.receiver, contex: context);
           },
         ),
         IconButton(
