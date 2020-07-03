@@ -10,11 +10,10 @@ class UserProvider with ChangeNotifier {
 
   User get getUser => _user;
 
-  void refreshUser() async {
+  Future<void> refreshUser() async {
     User user = await _authMethods.getUserDetails();
-    print("uid user apakah masih null?" + user.uid);
+   print("uid user apakah masih null?" + user.uid);
     _user = user;
     notifyListeners();
-    _authMethods.setUserState(userId: user.uid, userState: UserState.Online);
-  }
+     }
 }
