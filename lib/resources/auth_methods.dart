@@ -10,7 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthMethods {
   static final Firestore _firestore = Firestore.instance;
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+   FirebaseAuth _auth = FirebaseAuth.instance;
   GoogleSignIn _googleSignIn = GoogleSignIn();
   static final Firestore firestore = Firestore.instance;
 
@@ -58,6 +58,8 @@ class AuthMethods {
     } catch (e) {
       print("gagal bosku");
     }
+
+
 
     return user;
   }

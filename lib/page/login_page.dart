@@ -74,11 +74,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void authenticateUser(FirebaseUser user) {
-    setState(() {
-      isLoginPressed = false;
-    });
+
     _authMethods.authenticateUser(user).then((isNewUser) {
-      print("hasil is new user ${isNewUser.toString()}");
       if (isNewUser) {
         _authMethods.addDataToDb(user).then((value) {
           Navigator.pushReplacement(context,

@@ -6,7 +6,6 @@ import 'package:chatappforweeb/page/screen/call_screen.dart';
 import 'package:chatappforweeb/resources/call_method.dart';
 import 'package:chatappforweeb/utils/permission.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class CallUtils {
   static final CallMethods callMethods = CallMethods();

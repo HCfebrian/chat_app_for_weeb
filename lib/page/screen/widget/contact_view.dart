@@ -4,7 +4,6 @@ import 'package:chatappforweeb/page/chat_page.dart';
 import 'package:chatappforweeb/provider/user_provider.dart';
 import 'package:chatappforweeb/resources/auth_methods.dart';
 import 'package:chatappforweeb/resources/chat_methods.dart';
-import 'package:chatappforweeb/utils/universal_variable.dart';
 import 'package:chatappforweeb/widgets/cached_image.dart';
 import 'package:chatappforweeb/widgets/custom_tile.dart';
 import 'package:chatappforweeb/widgets/last_message.dart';
